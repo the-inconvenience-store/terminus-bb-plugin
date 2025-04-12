@@ -9,6 +9,12 @@
     import { loadModelFile } from './modelLoader';
     import { exportModelToGltf, getDefaultGltfOptions } from './gltfExporter';
     import { getDefaultViewportOptions, takeModelScreenshot } from './screenshotRenderer';
+    import { 
+        createOutputDirectory, 
+        createModelOutputDirectory, 
+        copyBBModelToOutputDir 
+    } from './index';
+    import * as path from 'path';
 
     let exportInProgress = false;
     let exportResults: ExportResult[] = [];
@@ -46,13 +52,23 @@
         exportInProgress = true;
         exportResults = [];
         
+        // Create the main output directory
+        const outputDir = createOutputDirectory(projectDirectory);
+        
         const selectedFiles = modelFiles.filter(file => file.selected);
         
         // Process each selected model
         for (const file of selectedFiles) {
             try {
-                // Load the model file
-                const modelData = await loadModelFile(file.path);
+                // Create a model-specific output directory
+                const modelName = path.basename(file.name, '.bbmodel');
+                const modelOutputDir = createModelOutputDirectory(outputDir, modelName);
+                
+                // Copy the bbmodel file to the output directory
+                const copiedModelPath = copyBBModelToOutputDir(file.path, modelOutputDir);
+                
+                // Load the copied model file for processing
+                const modelData = await loadModelFile(copiedModelPath);
                 
                 if (!modelData) {
                     exportResults.push({
@@ -63,8 +79,8 @@
                     continue;
                 }
                 
-                // Validate the model
-                const validationResult = validateModel(modelData, file.path);
+                // Validate the copied model
+                const validationResult = validateModel(modelData, copiedModelPath);
                 
                 if (!validationResult.valid && validationResult.errors.length > 0) {
                     exportResults.push({
@@ -74,16 +90,16 @@
                     });
                     continue;
                 }
-				
-				const screenshotPath = file.path.replace('.bbmodel', '.png');
                 
-				await takeModelScreenshot(screenshotPath, getDefaultViewportOptions());
-
-				// Set up export path
-                const outputPath = file.path.replace('.bbmodel', '.gltf');
+                // Set up output paths for screenshot and GLTF in the model-specific folder
+                const screenshotPath = path.join(modelOutputDir, `${modelName}.png`);
+                const gltfPath = path.join(modelOutputDir, `${modelName}.gltf`);
+                
+                // Generate screenshot
+                await takeModelScreenshot(screenshotPath, getDefaultViewportOptions());
 
                 // Export the model to GLTF
-                await exportModelToGltf(outputPath, getDefaultGltfOptions());
+                await exportModelToGltf(gltfPath, getDefaultGltfOptions());
                 
                 // Record the export result
                 if (validationResult.warnings.length > 0) {
@@ -96,7 +112,7 @@
                     exportResults.push({
                         model: file.name,
                         status: 'success',
-                        message: 'Export successful'
+                        message: `Export successful to ${path.relative(projectDirectory, modelOutputDir)}`
                     });
                 }
             } catch (error) {

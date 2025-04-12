@@ -27,10 +27,8 @@ export async function takeModelScreenshot(
 
     // Set the focal length to 58
     console.log('Setting camera zoom');
-    // if (render_viewport.isOrtho) {
     render_viewport.camera.zoom = 58 / 100;
     render_viewport.camera.updateProjectionMatrix();
-    // }
 
     // Return a promise that resolves when the screenshot is saved
     return new Promise((resolve, reject) => {
