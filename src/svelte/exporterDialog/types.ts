@@ -23,14 +23,6 @@ export interface ModelData {
     [key: string]: any;
 }
 
-export interface BlockbenchViewportOptions {
-    id: string;
-    projection: string;
-    position: number[];
-    target: number[];
-    zoom: number;
-}
-
 export type GltfExportOptions = {
     textures: boolean;
     archive: boolean;

@@ -8,7 +8,7 @@
     import { validateModel } from './modelValidator';
     import { loadModelFile } from './modelLoader';
     import { exportModelToGltf, getDefaultGltfOptions } from './gltfExporter';
-    import { getDefaultViewportOptions, takeModelScreenshot } from './screenshotRenderer';
+    import { takeModelScreenshot } from './screenshotRenderer';
     import { 
         createOutputDirectory, 
         createModelOutputDirectory, 
@@ -113,7 +113,7 @@
                 
                 // Generate screenshot first
                 try {
-                    await takeModelScreenshot(screenshotPath, getDefaultViewportOptions());
+                    await takeModelScreenshot(screenshotPath);
                     console.log(`Screenshot created for ${modelName}`);
                 } catch (err) {
                     console.error(`Screenshot error for ${modelName}:`, err);
