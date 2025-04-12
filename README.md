@@ -1,7 +1,7 @@
-# Blockbench Plugin Template
-A TypeScript & ESBuild Blockbench plugin template.
+# Terminus Blockbench Plugin
+![terminus logo](/terminus.png "Terminus Logo")
 
-Includes everything you need to get started and more with Blockbench plugin development!
+Helper plugin for Terminus creators. Assists with anchor point verification, file generation, and exporting of model parts for Terminus.
 
 ## Utilities
 - SnaveSutit/blockbench-types - The most up-to-date Blockbench types available, improvements and fixes almost every week!

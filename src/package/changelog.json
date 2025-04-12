@@ -17,5 +17,20 @@
 				]
 			}
 		]
+	},
+	"0.1.0": {
+		"title": "v0.1.0",
+		"author": "the-inconvenience-store",
+		"date": "2025-04-12",
+		"categories": [
+			{
+				"title": "Changes",
+				"list": [
+					"You can now export models ready to upload to Terminus!",
+					"Models anchor points, textures, and location are validated and automatically fixed in most cases.",
+					"Screenshot & GLTF included in export"
+				]
+			}
+		]
 	}
 }
