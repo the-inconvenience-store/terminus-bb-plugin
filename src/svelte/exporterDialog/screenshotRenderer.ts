@@ -43,18 +43,22 @@ export async function takeModelScreenshot(
 
                     // Get the data URL and save it
                     console.log('Getting screenshot data URL');
-                    const dataUrl = render_viewport.canvas.toDataURL();
 
-                    console.log('Screenshot taken, processing data URL');
+                    const screenshotOptions: ScreenshotOptions = {};
+                    Screencam.screenshotPreview(render_viewport, screenshotOptions, (dataUrl) => {
+                        console.log('Screenshot taken, processing data URL');
 
-                    // Convert data URL to buffer and save
-                    console.log('Converting screenshot to file');
-                    const data = dataUrl.replace(/^data:image\/\w+;base64,/, '');
-                    const buffer = Buffer.from(data, 'base64');
-                    fs.writeFileSync(outputPath, buffer);
-                    console.log(`Screenshot saved to: ${outputPath}`);
+                        // Convert data URL to buffer and save
+                        console.log('Converting screenshot to file');
+                        const data = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+                        const buffer = Buffer.from(data, 'base64');
+                        fs.writeFileSync(outputPath, buffer);
+                        console.log(`Screenshot saved to: ${outputPath}`);
 
-                    resolve(outputPath);
+                        resolve(outputPath);
+
+                    });
+
                 } catch (err) {
                     console.error('Error during screenshot capture:', err);
                     reject(err);
