@@ -71,13 +71,14 @@
                 
                 // Read the file directly instead of using Blockbench's loaded project
                 let modelData;
+                let validationResult: ValidationResult; // Define validationResult at a higher scope
                 try {
                     // Read the JSON content from the file
                     const fileContent = fs.readFileSync(copiedModelPath, 'utf8');
                     modelData = JSON.parse(fileContent);
                     
                     // Validate the copied model
-                    const validationResult = validateModel(modelData, copiedModelPath);
+                    validationResult = validateModel(modelData, copiedModelPath);
                     
                     if (!validationResult.valid && validationResult.errors.length > 0) {
                         exportResults.push({
@@ -98,7 +99,7 @@
                     
                     // Additional wait to ensure model is fully loaded
                     await new Promise(resolve => setTimeout(resolve, 1000));
-                } catch (err) {
+                } catch (err: any) {
                     exportResults.push({
                         model: file.name,
                         status: 'error',
@@ -115,7 +116,7 @@
                 try {
                     await takeModelScreenshot(screenshotPath);
                     console.log(`Screenshot created for ${modelName}`);
-                } catch (err) {
+                } catch (err: any) {
                     console.error(`Screenshot error for ${modelName}:`, err);
                     exportResults.push({
                         model: file.name,
@@ -132,7 +133,7 @@
                 try {
                     await exportModelToGltf(gltfPath, getDefaultGltfOptions());
                     console.log(`GLTF created for ${modelName}`);
-                } catch (err) {
+                } catch (err: any) {
                     console.error(`GLTF export error for ${modelName}:`, err);
                     exportResults.push({
                         model: file.name,
@@ -156,7 +157,7 @@
                         message: `Export successful to ${path.relative(projectDirectory, modelOutputDir)}`
                     });
                 }
-            } catch (error) {
+            } catch (error: any) {
                 exportResults.push({
                     model: file.name,
                     status: 'error',
@@ -169,7 +170,7 @@
         if (originalProject) {
             try {
                 originalProject.select();
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Failed to restore original project:', err);
             }
         }
