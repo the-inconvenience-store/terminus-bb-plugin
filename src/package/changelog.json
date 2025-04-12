@@ -1,0 +1,21 @@
+{
+	"0.0.1": {
+		"title": "v0.0.1",
+		"author": "the-inconvenience-store",
+		"date": "2025-04-12",
+		"categories": [
+			{
+				"title": "Changes",
+				"list": [
+					"Created the plugin!"
+				]
+			},
+			{
+				"title": "Fixes",
+				"list": [
+					"Fixed the plugin not existing!"
+				]
+			}
+		]
+	}
+}
