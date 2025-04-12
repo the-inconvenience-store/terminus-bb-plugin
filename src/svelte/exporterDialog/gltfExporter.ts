@@ -16,7 +16,7 @@ export async function exportModelToGltf(
     console.log(`GLTF will be exported to: ${outputPath}`);
 
     // Find the GLTF codec
-    const gltfCodec = Codecs.gltf || Object.values(Codecs).find(codec => codec.id === 'gltf');
+    const gltfCodec = Codecs.gltf;
 
     if (!gltfCodec) {
         throw new Error('GLTF codec not found');
@@ -25,19 +25,13 @@ export async function exportModelToGltf(
     return new Promise((resolve, reject) => {
         console.log('Compiling GLTF content');
         try {
-            // Wait for the GLTF compilation Promise to resolve
-            gltfCodec.compile(options)
-                .then(gltfContent => {
-                    // Save GLTF content
-                    console.log(`Writing GLTF to: ${outputPath}`);
-                    fs.writeFileSync(outputPath, gltfContent);
-                    console.log('GLTF file written successfully');
-                    resolve(outputPath);
-                })
-                .catch(err => {
-                    console.error('GLTF compilation error:', err);
-                    reject(err);
-                });
+            gltfCodec.compile(options).then((content: unknown) => {
+                gltfCodec.write(content as Buffer, outputPath);
+                resolve(outputPath);
+            }).catch((err: Error) => {
+                console.error('GLTF compilation error:', err);
+                reject(err);
+            });
         } catch (err) {
             console.error('GLTF export setup error:', err);
             reject(err);
