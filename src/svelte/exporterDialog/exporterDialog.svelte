@@ -56,8 +56,9 @@
         const outputDir = createOutputDirectory(projectDirectory);
         
         const selectedFiles = modelFiles.filter(file => file.selected);
+        const originalProject = Project; // Store current project to restore later
         
-        // Process each selected model
+        // Process each selected model sequentially to avoid conflicts
         for (const file of selectedFiles) {
             try {
                 // Create a model-specific output directory
@@ -68,13 +69,21 @@
                 const copiedModelPath = copyBBModelToOutputDir(file.path, modelOutputDir);
                 
                 // Load the copied model file for processing
-                const modelData = await loadModelFile(copiedModelPath);
-                
-                if (!modelData) {
+                let modelData;
+                try {
+                    modelData = await loadModelFile(copiedModelPath);
+                    
+                    // Additional wait to ensure model is fully loaded
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    if (!modelData) {
+                        throw new Error("Model failed to load properly");
+                    }
+                } catch (err) {
                     exportResults.push({
                         model: file.name,
                         status: 'error',
-                        message: 'Failed to load model file'
+                        message: `Failed to load model file: ${err.message || 'Unknown error'}`
                     });
                     continue;
                 }
@@ -95,11 +104,36 @@
                 const screenshotPath = path.join(modelOutputDir, `${modelName}.png`);
                 const gltfPath = path.join(modelOutputDir, `${modelName}.gltf`);
                 
-                // Generate screenshot
-                await takeModelScreenshot(screenshotPath, getDefaultViewportOptions());
+                // Generate screenshot first
+                try {
+                    await takeModelScreenshot(screenshotPath, getDefaultViewportOptions());
+                    console.log(`Screenshot created for ${modelName}`);
+                } catch (err) {
+                    console.error(`Screenshot error for ${modelName}:`, err);
+                    exportResults.push({
+                        model: file.name,
+                        status: 'error',
+                        message: `Screenshot failed: ${err.message || 'Unknown error'}`
+                    });
+                    continue;
+                }
+
+                // Wait a moment before exporting GLTF
+                await new Promise(resolve => setTimeout(resolve, 200));
 
                 // Export the model to GLTF
-                await exportModelToGltf(gltfPath, getDefaultGltfOptions());
+                try {
+                    await exportModelToGltf(gltfPath, getDefaultGltfOptions());
+                    console.log(`GLTF created for ${modelName}`);
+                } catch (err) {
+                    console.error(`GLTF export error for ${modelName}:`, err);
+                    exportResults.push({
+                        model: file.name,
+                        status: 'error',
+                        message: `GLTF export failed: ${err.message || 'Unknown error'}`
+                    });
+                    continue;
+                }
                 
                 // Record the export result
                 if (validationResult.warnings.length > 0) {
@@ -121,6 +155,15 @@
                     status: 'error',
                     message: `Export failed: ${error.message || 'Unknown error'}`
                 });
+            }
+        }
+        
+        // Restore original project if possible
+        if (originalProject) {
+            try {
+                originalProject.select();
+            } catch (err) {
+                console.error('Failed to restore original project:', err);
             }
         }
         

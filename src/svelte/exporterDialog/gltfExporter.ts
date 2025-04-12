@@ -23,19 +23,51 @@ export async function exportModelToGltf(
     }
 
     return new Promise((resolve, reject) => {
-        console.log('Compiling GLTF content');
-        try {
-            gltfCodec.compile(options).then((content: unknown) => {
-                gltfCodec.write(content as Buffer, outputPath);
-                resolve(outputPath);
-            }).catch((err: Error) => {
-                console.error('GLTF compilation error:', err);
+        // Make sure the model is fully loaded and rendered before export
+        Canvas.updateAll();
+
+        // Give Blockbench a moment to finish any pending operations
+        setTimeout(async () => {
+            console.log('Compiling GLTF content');
+            try {
+                // Force internal Blockbench updates before compiling
+                Blockbench.dispatchEvent('update_view');
+                Canvas.updateAll();
+
+                // Make sure the output directory exists
+                const outputDir = path.dirname(outputPath);
+                if (!fs.existsSync(outputDir)) {
+                    fs.mkdirSync(outputDir, { recursive: true });
+                }
+
+                // Compile the GLTF
+                try {
+                    const content = await gltfCodec.compile(options);
+
+                    // Validate the compiled content
+                    if (!content) {
+                        throw new Error('GLTF compilation returned empty content');
+                    }
+
+                    console.log('GLTF compiled successfully, writing to file');
+                    await gltfCodec.write(content as Buffer, outputPath);
+
+                    // Verify the file was created
+                    if (!fs.existsSync(outputPath)) {
+                        throw new Error('GLTF file was not created');
+                    }
+
+                    console.log('GLTF export complete:', outputPath);
+                    resolve(outputPath);
+                } catch (err) {
+                    console.error('GLTF compilation error:', err);
+                    reject(err);
+                }
+            } catch (err) {
+                console.error('GLTF export setup error:', err);
                 reject(err);
-            });
-        } catch (err) {
-            console.error('GLTF export setup error:', err);
-            reject(err);
-        }
+            }
+        }, 300);
     });
 }
 

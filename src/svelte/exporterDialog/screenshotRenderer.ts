@@ -29,6 +29,7 @@ export async function takeModelScreenshot(
     console.log('Setting camera zoom');
     render_viewport.camera.zoom = 58 / 100;
     render_viewport.camera.updateProjectionMatrix();
+    // }
 
     // Return a promise that resolves when the screenshot is saved
     return new Promise((resolve, reject) => {
