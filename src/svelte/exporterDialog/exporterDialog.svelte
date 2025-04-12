@@ -8,6 +8,7 @@
     import { validateModel } from './modelValidator';
     import { loadModelFile } from './modelLoader';
     import { exportModelToGltf, getDefaultGltfOptions } from './gltfExporter';
+    import { getDefaultViewportOptions, takeModelScreenshot } from './screenshotRenderer';
 
     let exportInProgress = false;
     let exportResults: ExportResult[] = [];
@@ -73,10 +74,14 @@
                     });
                     continue;
                 }
+				
+				const screenshotPath = file.path.replace('.bbmodel', '.png');
                 
-                // Set up export path
+				await takeModelScreenshot(screenshotPath, getDefaultViewportOptions());
+
+				// Set up export path
                 const outputPath = file.path.replace('.bbmodel', '.gltf');
-                
+
                 // Export the model to GLTF
                 await exportModelToGltf(outputPath, getDefaultGltfOptions());
                 
