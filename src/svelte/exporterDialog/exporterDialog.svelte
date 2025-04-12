@@ -15,6 +15,7 @@
         copyBBModelToOutputDir 
     } from './index';
     import * as path from 'path';
+    import * as fs from 'fs';
 
     let exportInProgress = false;
     let exportResults: ExportResult[] = [];
@@ -68,34 +69,40 @@
                 // Copy the bbmodel file to the output directory
                 const copiedModelPath = copyBBModelToOutputDir(file.path, modelOutputDir);
                 
-                // Load the copied model file for processing
+                // Read the file directly instead of using Blockbench's loaded project
                 let modelData;
                 try {
-                    modelData = await loadModelFile(copiedModelPath);
+                    // Read the JSON content from the file
+                    const fileContent = fs.readFileSync(copiedModelPath, 'utf8');
+                    modelData = JSON.parse(fileContent);
+                    
+                    // Validate the copied model
+                    const validationResult = validateModel(modelData, copiedModelPath);
+                    
+                    if (!validationResult.valid && validationResult.errors.length > 0) {
+                        exportResults.push({
+                            model: file.name,
+                            status: 'error',
+                            message: validationResult.errors.join(', ')
+                        });
+                        continue;
+                    }
+                    
+                    // Save the modified model back to the copied file
+                    // This ensures changes like grounding are persisted to the exported file
+                    fs.writeFileSync(copiedModelPath, JSON.stringify(modelData, null, 2));
+                    console.log(`Updated model saved to ${copiedModelPath}`);
+                    
+                    // Now load the model into Blockbench for screenshot and GLTF export
+                    await loadModelFile(copiedModelPath);
                     
                     // Additional wait to ensure model is fully loaded
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    
-                    if (!modelData) {
-                        throw new Error("Model failed to load properly");
-                    }
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 } catch (err) {
                     exportResults.push({
                         model: file.name,
                         status: 'error',
-                        message: `Failed to load model file: ${err.message || 'Unknown error'}`
-                    });
-                    continue;
-                }
-                
-                // Validate the copied model
-                const validationResult = validateModel(modelData, copiedModelPath);
-                
-                if (!validationResult.valid && validationResult.errors.length > 0) {
-                    exportResults.push({
-                        model: file.name,
-                        status: 'error',
-                        message: validationResult.errors.join(', ')
+                        message: `Failed to process model file: ${err.message || 'Unknown error'}`
                     });
                     continue;
                 }

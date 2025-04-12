@@ -23,9 +23,6 @@ export async function exportModelToGltf(
     }
 
     return new Promise((resolve, reject) => {
-        // Make sure the model is fully loaded and rendered before export
-        Canvas.updateAll();
-
         // Give Blockbench a moment to finish any pending operations
         setTimeout(async () => {
             console.log('Compiling GLTF content');

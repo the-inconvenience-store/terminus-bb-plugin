@@ -26,6 +26,7 @@ export function validateModel(modelData: ModelData, modelPath: string): Validati
 
     validateAnchorElements(modelData, result);
     validateTextures(modelData, modelPath, result);
+    groundModel(modelData, result);
 
     console.log(`Model validation complete - Valid: ${result.valid}, Errors: ${result.errors.length}, Warnings: ${result.warnings.length}`);
     return result;
@@ -74,6 +75,66 @@ function validateAnchorElements(modelData: ModelData, result: ValidationResult):
             result.valid = false;
         }
     }
+}
+
+/**
+ * Grounds the model by translating all elements so that the lowest Y coordinate is at Y=0
+ * This affects from, to, and origin properties of all elements
+ */
+function groundModel(modelData: ModelData, result: ValidationResult): void {
+    console.log('Grounding model to Y=0');
+
+    if (!modelData.elements || modelData.elements.length === 0) {
+        console.log('Cannot ground model: No elements found');
+        return;
+    }
+
+    // Find the lowest Y coordinate across all elements (from, to, and origin points)
+    let lowestY = Infinity;
+
+    for (const element of modelData.elements) {
+        if (element.from && Array.isArray(element.from) && element.from.length > 1) {
+            lowestY = Math.min(lowestY, element.from[1]);
+        }
+
+        if (element.to && Array.isArray(element.to) && element.to.length > 1) {
+            lowestY = Math.min(lowestY, element.to[1]);
+        }
+
+        if (element.origin && Array.isArray(element.origin) && element.origin.length > 1) {
+            lowestY = Math.min(lowestY, element.origin[1]);
+        }
+    }
+
+    if (lowestY === Infinity) {
+        console.log('Cannot ground model: No valid Y coordinates found');
+        return;
+    }
+
+    // If the model is already grounded (lowestY is 0), no need to translate
+    if (lowestY === 0) {
+        console.log('Model is already grounded (lowest Y = 0)');
+        return;
+    }
+
+    console.log(`Translating model by Y offset of ${-lowestY} (lowest point was at Y=${lowestY})`);
+
+    // Translate all elements
+    for (const element of modelData.elements) {
+        if (element.from && Array.isArray(element.from) && element.from.length > 1) {
+            element.from[1] -= lowestY;
+        }
+
+        if (element.to && Array.isArray(element.to) && element.to.length > 1) {
+            element.to[1] -= lowestY;
+        }
+
+        if (element.origin && Array.isArray(element.origin) && element.origin.length > 1) {
+            element.origin[1] -= lowestY;
+        }
+    }
+
+    result.warnings.push(`Model has been grounded - lowest point adjusted from Y=${lowestY} to Y=0`);
 }
 
 /**

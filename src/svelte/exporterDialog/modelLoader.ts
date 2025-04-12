@@ -55,35 +55,10 @@ export async function loadModelFile(modelPath: string): Promise<any> {
                     console.log('Using project codec to load model...');
                     projectCodec.load(modelData, fileObj);
 
-                    // Give the model time to fully initialize before continuing
-                    // Use a timeout to ensure the model is fully loaded into Blockbench
                     setTimeout(() => {
-                        // Find the newly loaded ModelProject and select it
-                        const loadedProject = ModelProject.all.find(project =>
-                            project.save_path === modelPath ||
-                            project.name === path.basename(modelPath, '.bbmodel')
-                        );
+                        resolve(true);
+                    }, 200);
 
-                        if (!loadedProject) {
-                            console.error('Could not find loaded project');
-                            reject(new Error('Failed to find loaded project'));
-                            return;
-                        }
-
-                        console.log('Found loaded project:', loadedProject.name);
-                        loadedProject.select();
-                        console.log('Model selected successfully');
-
-                        // Wait for any pending Blockbench operations to complete
-                        // Force a UI update to ensure the model is rendered
-                        Blockbench.dispatchEvent('update_view');
-                        Canvas.updateAll();
-
-                        // Additional delay to ensure everything is fully loaded
-                        setTimeout(() => {
-                            resolve(loadedProject);
-                        }, 200);
-                    }, 300);
                 } catch (err) {
                     console.error('Error loading model:', err);
                     reject(err);
