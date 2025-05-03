@@ -109,7 +109,7 @@
                 }
                 
                 // Set up output paths for screenshot and GLTF in the model-specific folder
-                const screenshotPath = path.join(modelOutputDir, `${modelName}.png`);
+                const screenshotPath = path.join(modelOutputDir, `${modelName}_thumb.png`);
                 const gltfPath = path.join(modelOutputDir, `${modelName}.gltf`);
                 
                 // Generate screenshot first
